@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InspectRouteImport } from './routes/inspect'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiPublicMcpRouteImport } from './routes/api/public/mcp'
 import { Route as ApiV1SplatRouteImport } from './routes/api/v1/$'
@@ -17,6 +18,11 @@ import { Route as ApiV1SplatRouteImport } from './routes/api/v1/$'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InspectRoute = InspectRouteImport.update({
+  id: '/inspect',
+  path: '/inspect',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -37,12 +43,14 @@ const ApiV1SplatRoute = ApiV1SplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/inspect': typeof InspectRoute
   '/api/chat': typeof ApiChatRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/v1/$': typeof ApiV1SplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/inspect': typeof InspectRoute
   '/api/chat': typeof ApiChatRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/v1/$': typeof ApiV1SplatRoute
@@ -50,20 +58,28 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/inspect': typeof InspectRoute
   '/api/chat': typeof ApiChatRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/v1/$': typeof ApiV1SplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/chat' | '/api/public/mcp' | '/api/v1/$'
+  fullPaths: '/' | '/inspect' | '/api/chat' | '/api/public/mcp' | '/api/v1/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/chat' | '/api/public/mcp' | '/api/v1/$'
-  id: '__root__' | '/' | '/api/chat' | '/api/public/mcp' | '/api/v1/$'
+  to: '/' | '/inspect' | '/api/chat' | '/api/public/mcp' | '/api/v1/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/inspect'
+    | '/api/chat'
+    | '/api/public/mcp'
+    | '/api/v1/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  InspectRoute: typeof InspectRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiPublicMcpRoute: typeof ApiPublicMcpRoute
   ApiV1SplatRoute: typeof ApiV1SplatRoute
@@ -76,6 +92,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inspect': {
+      id: '/inspect'
+      path: '/inspect'
+      fullPath: '/inspect'
+      preLoaderRoute: typeof InspectRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -104,6 +127,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  InspectRoute: InspectRoute,
   ApiChatRoute: ApiChatRoute,
   ApiPublicMcpRoute: ApiPublicMcpRoute,
   ApiV1SplatRoute: ApiV1SplatRoute,
