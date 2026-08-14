@@ -32,11 +32,13 @@ export const Route = createFileRoute("/api/v1/$")({
 
         if (path === "/concepts") {
           return json(
-            listConcepts({
-              stack: q.get("stack") ?? undefined,
-              depth: q.get("depth") ?? undefined,
-              query: q.get("query") ?? undefined,
-            }),
+            listConcepts(
+              Object.fromEntries(
+                (["stack", "depth", "query"] as const)
+                  .map((k) => [k, q.get(k)])
+                  .filter(([, v]) => v),
+              ),
+            ),
           );
         }
         if (segs[0] === "concepts" && segs[1] && segs.length === 2) {
@@ -65,17 +67,17 @@ export const Route = createFileRoute("/api/v1/$")({
         }
 
         if (path === "/experiences") {
-          if (typeof body.intent !== "string" || !body.intent.trim())
+          if (typeof body["intent"] !== "string" || !body["intent"].trim())
             return json({ detail: "`intent` is required" }, 422);
           return json(createExperience(body as never));
         }
         if (path === "/explain") {
-          const result = explain(String(body.concept_id ?? ""), (body.mode as never) ?? "we_do");
+          const result = explain(String(body["concept_id"] ?? ""), (body["mode"] as never) ?? "we_do");
           return result ? json(result) : notFound("Concept not found");
         }
         if (path === "/evidence/assess") {
-          const ids = Array.isArray(body.concept_ids) ? (body.concept_ids as string[]) : [];
-          return json(assessEvidence(ids, String(body.body ?? ""), String(body.learner_id ?? "demo-learner")));
+          const ids = Array.isArray(body["concept_id"]s) ? (body["concept_id"]s as string[]) : [];
+          return json(assessEvidence(ids, String(body["body"] ?? ""), String(body["learner_id"] ?? "demo-learner")));
         }
 
         return notFound(`No operation for POST ${path}`);
