@@ -1,11 +1,10 @@
 /**
  * Conversational pedagogy stream.
  *
- * Vercel AI SDK v7 over the Lovable AI Gateway. The tool surface mirrors the
+ * Vercel AI SDK v7 over the Vercel AI Gateway. The tool surface mirrors the
  * MCP/Pydantic grammar, so every teaching move the model makes is also an
  * inspectable object the UI can render as generative UI.
  */
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   convertToModelMessages,
@@ -117,22 +116,13 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env["LOVABLE_API_KEY"];
-        if (!apiKey) return new Response("AI gateway key missing", { status: 500 });
-
         const { messages, mode } = (await request.json()) as {
           messages: UIMessage[];
           mode?: PedagogyMode;
         };
 
-        const gateway = createOpenAICompatible({
-          name: "lovable",
-          baseURL: "https://ai.gateway.lovable.dev/v1",
-          apiKey,
-        });
-
         const result = streamText({
-          model: gateway("google/gemini-2.5-flash"),
+          model: "google/gemini-2.5-flash",
           system: systemPrompt(mode ?? "we_do"),
           messages: await convertToModelMessages(messages),
           tools,
