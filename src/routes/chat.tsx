@@ -1,7 +1,9 @@
 import { useChat } from "@ai-sdk/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { DefaultChatTransport } from "ai";
-import { useMemo, useState } from "react";
+import { CheckIcon, CopyIcon, PencilRulerIcon, RefreshCcwIcon, ScanEyeIcon } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { AdrView } from "@/routes/index";
 import {
@@ -17,17 +19,29 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import { Message, MessageContent } from "@/components/ai-elements/message";
+import {
+  Message,
+  MessageAction,
+  MessageActions,
+  MessageContent,
+  MessageResponse,
+} from "@/components/ai-elements/message";
 import {
   PromptInput,
   PromptInputBody,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputFooter,
+  PromptInputTools,
+  PromptInputButton,
 } from "@/components/ai-elements/prompt-input";
+import { Reasoning, ReasoningContent, ReasoningTrigger } from "@/components/ai-elements/reasoning";
+import { Source, Sources, SourcesContent, SourcesTrigger } from "@/components/ai-elements/sources";
+import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Shimmer } from "@/components/ai-elements/shimmer";
+import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { MODE_BLURB, conceptById, seed, type Decision, type PedagogyMode } from "@/lib/lampforge";
-import { useStore } from "@/lib/store";
+import { useFocus, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -50,17 +64,36 @@ export const Route = createFileRoute("/chat")({
   component: ChatSurface,
 });
 
-const STARTERS = [
-  "Explain prepared statements the way you'd teach them.",
-  "Build me a booking form with validation.",
-  "Why did we normalise the bookings table? Show the ADR.",
-  "Assess this: I used mysqli_real_escape_string to stop injection.",
-];
+/** Suggestions are mode-aware: the tutor offers the move the mode allows. */
+const SUGGESTIONS: Record<PedagogyMode, string[]> = {
+  i_do: [
+    "Model a prepared statement end to end and narrate every decision.",
+    "Show me the booking form you would write, and why.",
+    "Walk through the ADR for the bookings schema.",
+    "Demonstrate server-side validation in PHP.",
+  ],
+  we_do: [
+    "Explain prepared statements the way you'd teach them.",
+    "Start a booking form with validation and hand me the next step.",
+    "Why did we normalise the bookings table? Show the ADR.",
+    "Give me the first half of the availability query.",
+  ],
+  you_do: [
+    "Set me a task on injection-safe queries.",
+    "Assess this: I used mysqli_real_escape_string to stop injection.",
+    "Check my booking form against the success criteria.",
+    "Quiz me on normalisation to 3NF.",
+  ],
+};
+
+type ToolPartShape = { type: string; state: string; output?: unknown; input?: unknown; errorText?: string };
 
 function ChatSurface() {
   const [store, setStore] = useStore();
+  const [, setFocus] = useFocus();
   const mode = store.learner.mode as PedagogyMode;
   const [input, setInput] = useState("");
+  const [showReasoning, setShowReasoning] = useState(true);
 
   const transport = useMemo(
     () =>
@@ -71,14 +104,17 @@ function ChatSurface() {
     [mode],
   );
 
-  const { messages, sendMessage, status, error } = useChat({ transport });
+  const { messages, sendMessage, status, error, regenerate, stop } = useChat({ transport });
   const busy = status === "submitted" || status === "streaming";
 
-  function send(text: string) {
-    if (!text.trim()) return;
-    void sendMessage({ text });
-    setInput("");
-  }
+  const send = useCallback(
+    (text: string) => {
+      if (!text.trim()) return;
+      void sendMessage({ text });
+      setInput("");
+    },
+    [sendMessage],
+  );
 
   return (
     <Page>
@@ -89,56 +125,92 @@ function ChatSurface() {
               mode={mode}
               onChange={(m) => setStore((s) => ({ learner: { ...s.learner, mode: m } }))}
             />
-            <p className="text-xs text-muted-foreground">{MODE_BLURB[mode]}</p>
+            <p className="text-body-sm text-muted-foreground">{MODE_BLURB[mode]}</p>
           </div>
 
           <Conversation className="min-h-0 flex-1">
             <ConversationContent>
               {messages.length === 0 ? (
                 <div className="space-y-3 p-2">
-                  <h1 className="text-lg font-semibold">Ask, and it teaches at your level.</h1>
-                  <p className="max-w-prose text-sm text-muted-foreground">
+                  <h1>Ask, and it teaches at your level.</h1>
+                  <p className="max-w-prose text-body-sm text-muted-foreground">
                     Every answer can arrive as an object you can inspect: a live Bootstrap component, an ADR, a concept
                     card, an assessment. Ask why it works, trace it to the code, trace it to the decision.
                   </p>
-                  <div className="flex flex-wrap gap-2">
-                    {STARTERS.map((s) => (
-                      <Chip key={s} onClick={() => send(s)}>
-                        {s}
-                      </Chip>
-                    ))}
-                  </div>
                 </div>
               ) : null}
 
-              {messages.map((m) => (
-                <Message from={m.role} key={m.id}>
-                  <MessageContent>
-                    {m.parts.map((part, i) => {
-                      const key = `${m.id}-${i}`;
-                      if (part.type === "text") return <p key={key} className="whitespace-pre-wrap">{part.text}</p>;
-                      if (part.type === "reasoning")
-                        return (
-                          <details key={key} className="rounded-md border border-border/60 text-xs">
-                            <summary className="cursor-pointer px-2 py-1 font-mono text-[11px] text-muted-foreground">
-                              teaching move
-                            </summary>
-                            <p className="whitespace-pre-wrap p-2 text-muted-foreground">{part.text}</p>
-                          </details>
-                        );
-                      if (part.type.startsWith("tool-")) {
-                        const tp = part as unknown as { type: string; state: string; output?: unknown; input?: unknown };
-                        return <ToolPart key={key} name={tp.type.replace("tool-", "")} state={tp.state} output={tp.output} />;
-                      }
-                      return null;
-                    })}
-                  </MessageContent>
-                </Message>
-              ))}
+              {messages.map((m) => {
+                const text = m.parts
+                  .filter((p): p is { type: "text"; text: string } => p.type === "text")
+                  .map((p) => p.text)
+                  .join("\n\n");
+                const cited = citations(m.parts as ToolPartShape[]);
 
-              {busy ? <Shimmer className="px-2 text-sm">thinking about how much to hand over…</Shimmer> : null}
+                return (
+                  <Message from={m.role} key={m.id}>
+                    <MessageContent>
+                      {cited.length > 0 ? (
+                        <Sources>
+                          <SourcesTrigger count={cited.length} />
+                          <SourcesContent>
+                            {cited.map((c) => (
+                              <Source key={c.href} href={c.href} title={c.title} />
+                            ))}
+                          </SourcesContent>
+                        </Sources>
+                      ) : null}
+
+                      {m.parts.map((part, i) => {
+                        const key = `${m.id}-${i}`;
+                        if (part.type === "text")
+                          return <MessageResponse key={key}>{part.text}</MessageResponse>;
+                        if (part.type === "reasoning" && showReasoning)
+                          return (
+                            <Reasoning key={key} isStreaming={busy} className="w-full">
+                              <ReasoningTrigger />
+                              <ReasoningContent>{part.text}</ReasoningContent>
+                            </Reasoning>
+                          );
+                        if (part.type.startsWith("tool-")) {
+                          const tp = part as unknown as ToolPartShape;
+                          return (
+                            <ToolPart
+                              key={key}
+                              name={tp.type.replace("tool-", "")}
+                              state={tp.state}
+                              input={tp.input}
+                              output={tp.output}
+                              onInspect={setFocus}
+                            />
+                          );
+                        }
+                        return null;
+                      })}
+
+                      {m.role === "assistant" && !busy ? (
+                        <MessageActions>
+                          <CopyAction text={text} />
+                          <MessageAction label="Ask again" tooltip="Regenerate this teaching move">
+                            <button type="button" onClick={() => void regenerate()} aria-label="Regenerate">
+                              <RefreshCcwIcon className="size-3.5" />
+                            </button>
+                          </MessageAction>
+                          <MessageAction label="Take to the PDE" tooltip="Continue this in the build surface">
+                            <Link to="/pde" aria-label="Open in PDE">
+                              <PencilRulerIcon className="size-3.5" />
+                            </Link>
+                          </MessageAction>
+                        </MessageActions>
+                      ) : null}
+                    </MessageContent>
+                  </Message>
+                );
+              })}
+
+              {busy ? <Shimmer className="px-2 text-body-sm">thinking about how much to hand over…</Shimmer> : null}
               {error ? (
-                <p className="rounded-md border border-destructive/50 bg-destructive/10 p-2 text-xs text-destructive">
+                <p className="rounded-md border border-destructive/50 bg-destructive/10 p-2 text-body-sm text-destructive">
                   {error.message}
                 </p>
               ) : null}
@@ -146,7 +218,13 @@ function ChatSurface() {
             <ConversationScrollButton />
           </Conversation>
 
-          <div className="border-t border-border p-3">
+          <div className="space-y-2 border-t border-border p-3">
+            <Suggestions>
+              {SUGGESTIONS[mode].map((s) => (
+                <Suggestion key={s} suggestion={s} onClick={send} />
+              ))}
+            </Suggestions>
+
             <PromptInput
               onSubmit={(msg) => send(msg.text ?? input)}
               className="rounded-lg border border-border bg-card/40"
@@ -159,10 +237,23 @@ function ChatSurface() {
                 />
               </PromptInputBody>
               <PromptInputFooter>
-                <span className="px-2 font-mono text-[11px] text-muted-foreground">
-                  tools: explain · build · adr · assess · learner
-                </span>
-                <PromptInputSubmit status={status} disabled={!input.trim() && !busy} />
+                <PromptInputTools>
+                  <PromptInputButton
+                    variant={showReasoning ? "default" : "ghost"}
+                    onClick={() => setShowReasoning((v) => !v)}
+                  >
+                    <ScanEyeIcon className="size-3.5" />
+                    <span>teaching move</span>
+                  </PromptInputButton>
+                  <span className="label-caps px-1 text-muted-foreground">
+                    tools: explain · build · adr · assess · learner
+                  </span>
+                </PromptInputTools>
+                <PromptInputSubmit
+                  status={status}
+                  onClick={busy ? () => void stop() : undefined}
+                  disabled={!input.trim() && !busy}
+                />
               </PromptInputFooter>
             </PromptInput>
           </div>
@@ -170,7 +261,7 @@ function ChatSurface() {
 
         <aside className="min-h-0 overflow-auto border-t border-border lg:border-l lg:border-t-0">
           <SectionTitle>learner model</SectionTitle>
-          <dl className="grid grid-cols-2 gap-x-2 gap-y-1 p-3 font-mono text-[11px]">
+          <dl className="grid grid-cols-2 gap-x-2 gap-y-1 p-3 font-mono text-code">
             {(
               [
                 ["accuracy", `${Math.round(store.learner.accuracy * 100)}%`],
@@ -178,7 +269,10 @@ function ChatSurface() {
                 ["retries", store.learner.retries],
                 ["hints", store.learner.hint_requests],
                 ["idle", `${store.learner.idle_seconds}s`],
-                ["retrievals", `${store.learner.successful_retrievals}/${store.learner.successful_retrievals + store.learner.failed_retrievals}`],
+                [
+                  "retrievals",
+                  `${store.learner.successful_retrievals}/${store.learner.successful_retrievals + store.learner.failed_retrievals}`,
+                ],
                 ["since exposure", `${store.learner.seconds_since_last_exposure}s`],
                 ["difficulty", store.learner.task_difficulty],
               ] as Array<[string, string | number]>
@@ -211,14 +305,73 @@ function ChatSurface() {
   );
 }
 
+/* ------------------------------------------------------------- citations */
+
+/** Every object the tutor touched becomes a traceable link into the contract. */
+function citations(parts: ToolPartShape[]) {
+  const out: Array<{ href: string; title: string }> = [];
+  for (const p of parts) {
+    if (!p.type?.startsWith("tool-") || p.state !== "output-available") continue;
+    const name = p.type.replace("tool-", "");
+    const data = (p.output ?? {}) as Record<string, unknown>;
+    if (name === "show_adr" && data["decision"]) {
+      const d = data["decision"] as Decision;
+      out.push({ href: `/#adr-${d.id}`, title: `ADR ${d.id} — ${d.title}` });
+    }
+    if (name === "explain_concept" && data["concept"]) {
+      const c = data["concept"] as { id: string; title: string };
+      out.push({ href: `/#concept-${c.id}`, title: `Concept ${c.id} — ${c.title}` });
+    }
+    if (name === "build_experience") out.push({ href: "/#op-post-experiences", title: "POST /experiences" });
+    if (name === "get_learner_state") out.push({ href: "/#op-get-learner", title: "GET /learner" });
+    if (name === "assess_evidence") out.push({ href: "/#op-post-evidence", title: "POST /evidence" });
+  }
+  return out.filter((v, i, a) => a.findIndex((x) => x.href === v.href) === i);
+}
+
+function CopyAction({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <MessageAction label="Copy" tooltip="Copy the answer">
+      <button
+        type="button"
+        aria-label="Copy answer"
+        onClick={() => {
+          void navigator.clipboard.writeText(text);
+          setCopied(true);
+          toast.success("Answer copied");
+          setTimeout(() => setCopied(false), 1500);
+        }}
+      >
+        {copied ? <CheckIcon className="size-3.5" /> : <CopyIcon className="size-3.5" />}
+      </button>
+    </MessageAction>
+  );
+}
+
 /* --------------------------------------------------- inline generative UI */
 
-function ToolPart({ name, state, output }: { name: string; state: string; output?: unknown }) {
+function ToolPart({
+  name,
+  state,
+  input,
+  output,
+  onInspect,
+}: {
+  name: string;
+  state: string;
+  input?: unknown;
+  output?: unknown;
+  onInspect: (f: { kind: "concept" | "decision" | "component"; id: string; label?: string }) => void;
+}) {
   if (state !== "output-available" || !output) {
     return (
-      <div className="rounded-md border border-border/60 px-2 py-1 font-mono text-[11px] text-muted-foreground">
-        {name} · {state}
-      </div>
+      <Tool defaultOpen={false}>
+        <ToolHeader type={`tool-${name}` as `tool-${string}`} state={state as never} />
+        <ToolContent>
+          <ToolInput input={input} />
+        </ToolContent>
+      </Tool>
     );
   }
   const data = output as Record<string, unknown>;
@@ -229,9 +382,10 @@ function ToolPart({ name, state, output }: { name: string; state: string; output
       <div className="space-y-2 rounded-md border border-border p-2">
         <div className="flex items-center gap-2">
           <Chip active>experience</Chip>
-          <span className="font-mono text-[11px] text-muted-foreground">{c.label}</span>
+          <span className="label-caps text-muted-foreground">{c.label}</span>
+          <Chip onClick={() => onInspect({ kind: "component", id: c.label, label: c.label })}>inspect</Chip>
         </div>
-        <p className="text-sm">{String(data["narration"] ?? "")}</p>
+        <p className="text-body-sm">{String(data["narration"] ?? "")}</p>
         <BootstrapFrame html={c.html} />
         {data["php"] ? <Json value={data["php"]} className="max-h-64" /> : null}
         {data["sql"] ? <Json value={data["sql"]} className="max-h-48" /> : null}
@@ -245,28 +399,40 @@ function ToolPart({ name, state, output }: { name: string; state: string; output
   }
 
   if (name === "show_adr" && data["decision"]) {
+    const d = data["decision"] as Decision;
     return (
       <div className="rounded-md border border-border">
-        <AdrView decision={data["decision"] as Decision} />
+        <AdrView decision={d} />
+        <div className="flex gap-1 border-t border-border p-2">
+          <Chip onClick={() => onInspect({ kind: "decision", id: d.id, label: d.title })}>keep in focus</Chip>
+        </div>
       </div>
     );
   }
 
   if (name === "explain_concept" && data["concept"]) {
-    const c = data["concept"] as { id: string; title: string; summary: string; vocabulary?: string[]; common_errors?: string[]; code_example?: string };
+    const c = data["concept"] as {
+      id: string;
+      title: string;
+      summary: string;
+      vocabulary?: string[];
+      common_errors?: string[];
+      code_example?: string;
+    };
     return (
       <div className="space-y-2 rounded-md border border-border p-2">
         <div className="flex items-center gap-2">
           <Chip active>concept</Chip>
-          <span className="font-mono text-[11px] text-primary">{c.id}</span>
+          <span className="label-caps text-primary">{c.id}</span>
+          <Chip onClick={() => onInspect({ kind: "concept", id: c.id, label: c.title })}>keep in focus</Chip>
         </div>
-        <h4 className="text-sm font-semibold">{c.title}</h4>
-        <p className="text-sm text-muted-foreground">{c.summary}</p>
-        {data["narration"] ? <p className="text-sm">{String(data["narration"])}</p> : null}
+        <h4>{c.title}</h4>
+        <p className="text-body-sm text-muted-foreground">{c.summary}</p>
+        {data["narration"] ? <MessageResponse>{String(data["narration"])}</MessageResponse> : null}
         <div className="flex flex-wrap gap-1">{c.vocabulary?.map((v) => <Chip key={v}>{v}</Chip>)}</div>
         {c.code_example ? <Json value={c.code_example} className="max-h-64" /> : null}
         {c.common_errors?.length ? (
-          <ul className="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
+          <ul className="list-disc space-y-0.5 pl-5 text-body-sm text-muted-foreground">
             {c.common_errors.map((e) => (
               <li key={e}>{e}</li>
             ))}
@@ -280,7 +446,7 @@ function ToolPart({ name, state, output }: { name: string; state: string; output
     return (
       <div className="flex flex-wrap gap-1 rounded-md border border-border p-2">
         {(output as Array<{ id: string; title: string; summary: string }>).map((c) => (
-          <Chip key={c.id} title={c.summary}>
+          <Chip key={c.id} title={c.summary} onClick={() => onInspect({ kind: "concept", id: c.id, label: c.title })}>
             {c.title}
           </Chip>
         ))}
@@ -288,21 +454,15 @@ function ToolPart({ name, state, output }: { name: string; state: string; output
     );
   }
 
-  if (name === "assess_evidence") {
+  if (name === "assess_evidence" || name === "get_learner_state") {
     return (
-      <div className="space-y-1 rounded-md border border-border p-2">
-        <Chip active>assessment</Chip>
-        <Json value={output} className="max-h-64" />
-      </div>
-    );
-  }
-
-  if (name === "get_learner_state") {
-    return (
-      <div className="space-y-1 rounded-md border border-border p-2">
-        <Chip active>learner state</Chip>
-        <Json value={output} className="max-h-56" />
-      </div>
+      <Tool defaultOpen>
+        <ToolHeader type={`tool-${name}` as `tool-${string}`} state="output-available" />
+        <ToolContent>
+          <ToolInput input={input} />
+          <ToolOutput output={<Json value={output} className="max-h-64" />} errorText={undefined} />
+        </ToolContent>
+      </Tool>
     );
   }
 
