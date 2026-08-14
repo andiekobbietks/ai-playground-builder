@@ -20,7 +20,7 @@ import {
 import { useFocus } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/playground")({
   head: () => ({
     meta: [
       { title: "LAMPForge Playground — WJEC Unit 4 contracts you can run" },
