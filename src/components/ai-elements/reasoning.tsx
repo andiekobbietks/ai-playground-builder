@@ -72,7 +72,7 @@ export const Reasoning = memo(
 
     const [isOpen, setIsOpen] = useControllableState<boolean>({
       defaultProp: resolvedDefaultOpen,
-      onChange: onOpenChange,
+      ...(onOpenChange ? { onChange: onOpenChange } : {}),
       prop: open,
     });
     const [duration, setDuration] = useControllableState<number | undefined>({
@@ -216,7 +216,7 @@ export const ReasoningContent = memo(
       )}
       {...props}
     >
-      <Streamdown plugins={streamdownPlugins}>{children}</Streamdown>
+      <Streamdown plugins={streamdownPlugins as never}>{children}</Streamdown>
     </CollapsibleContent>
   )
 );
