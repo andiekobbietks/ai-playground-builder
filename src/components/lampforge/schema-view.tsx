@@ -19,7 +19,7 @@ export function SchemaView({
 }: {
   schema: JsonSchema;
   depth?: number;
-  onSelectModel?: (name: string) => void;
+  onSelectModel?: ((name: string) => void) | undefined;
 }) {
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const props = schema.properties ?? {};
