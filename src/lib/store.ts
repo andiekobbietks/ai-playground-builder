@@ -311,7 +311,7 @@ export function recordEvidence(input: { concept_ids: string[]; body: string; kin
     concept_ids: input.concept_ids,
     body: input.body,
     kind: input.kind ?? "explanation",
-    verdict: input.verdict,
+    ...(input.verdict !== undefined ? { verdict: input.verdict } : {}),
     at: Date.now(),
   };
   setStore((s) => ({ evidence: [record, ...s.evidence] }));

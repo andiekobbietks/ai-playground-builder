@@ -477,7 +477,7 @@ function ExperienceCard({
     setBusy(true);
     setRun(null);
     try {
-      const res = await runExperience({ php, sql });
+      const res = await runExperience({ php: php ?? null, sql: sql ?? null });
       setRun(res);
       if (res.php)
         recordRun({
