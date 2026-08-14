@@ -40,7 +40,7 @@ import { Source, Sources, SourcesContent, SourcesTrigger } from "@/components/ai
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
-import { MODE_BLURB, conceptById, seed, type Decision, type PedagogyMode } from "@/lib/lampforge";
+import { MODE_BLURB, conceptById, type Decision, type PedagogyMode } from "@/lib/lampforge";
 import { useFocus, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/chat")({
@@ -469,4 +469,3 @@ function ToolPart({
   return <Json value={output} className="max-h-64" />;
 }
 
-export { seed };
