@@ -143,7 +143,7 @@ export const TerminalCopyButton = ({
   return (
     <Button
       className={cn(
-        "size-7 shrink-0 text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100",
+        "size-7 shrink-0 text-muted-foreground hover:bg-surface-raised hover:text-foreground",
         className
       )}
       onClick={copyToClipboard}
@@ -172,7 +172,7 @@ export const TerminalClearButton = ({
   return (
     <Button
       className={cn(
-        "size-7 shrink-0 text-muted-foreground hover:bg-zinc-800 hover:text-zinc-100",
+        "size-7 shrink-0 text-muted-foreground hover:bg-surface-raised hover:text-foreground",
         className
       )}
       onClick={onClear}
@@ -247,7 +247,7 @@ export const Terminal = ({
     <TerminalContext.Provider value={contextValue}>
       <div
         className={cn(
-          "flex flex-col overflow-hidden rounded-lg border bg-background text-zinc-100",
+          "flex flex-col overflow-hidden rounded-lg border bg-background text-foreground",
           className
         )}
         {...props}
