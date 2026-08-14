@@ -159,27 +159,142 @@ function decode(detail: string | number[]) {
   return typeof detail === "string" ? detail : new TextDecoder().decode(new Uint8Array(detail));
 }
 
-export async function runPhp(code: string): Promise<RunResult> {
+/**
+ * A real SQLite booking database, created inside PHP over PDO. This is what
+ * turns "PHP and SQL shown and reasoned about" into "PHP and SQL executed":
+ * the learner's `$pdo->prepare(...)` calls hit an actual database and return
+ * actual rows. The schema is the LAMP booking domain the curriculum teaches.
+ */
+const PHP_DB_BOOTSTRAP = [
+  "<?php",
+  "error_reporting(E_ALL);",
+  "ini_set('display_errors', '1');",
+  "try {",
+  "  $pdo = new PDO('sqlite::memory:');",
+  "  $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);",
+  "  $pdo->exec('CREATE TABLE customers (id INTEGER PRIMARY KEY, full_name TEXT NOT NULL)');",
+  "  $pdo->exec('CREATE TABLE slots (id INTEGER PRIMARY KEY, starts_at TEXT NOT NULL)');",
+  "  $pdo->exec('CREATE TABLE bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, customer_id INTEGER, slot_id INTEGER, status TEXT DEFAULT \\'pending\\')');",
+  "  $pdo->exec(\"INSERT INTO customers (id, full_name) VALUES (1,'Ada Lovelace'),(2,'Grace Hopper')\");",
+  "  $pdo->exec(\"INSERT INTO slots (id, starts_at) VALUES (1,'2026-09-01 09:00'),(2,'2026-09-01 10:00')\");",
+  "  $pdo->exec(\"INSERT INTO bookings (customer_id, slot_id, status) VALUES (2,2,'confirmed')\");",
+  "} catch (Throwable $e) {",
+  "  fwrite(STDERR, 'db bootstrap failed: ' . $e->getMessage() . \"\\n\");",
+  "}",
+  "// Context the curriculum snippets assume when they run as a POST handler.",
+  "$customerId = 1; $slotId = 1;",
+  "$_SERVER['REQUEST_METHOD'] = $_SERVER['REQUEST_METHOD'] ?? 'POST';",
+  "$_POST = $_POST ?: ['name' => 'Ada Lovelace', 'email' => 'ada@example.com'];",
+  "?>",
+].join("\n");
+
+const PHP_DB_TRAILER = [
+  "<?php",
+  "// Show the effect on the database so the learner sees PHP and SQL interact.",
+  "try {",
+  "  echo \"\\n--- bookings after your code ran ---\\n\";",
+  "  $stmt = $pdo->query('SELECT b.id, c.full_name, s.starts_at, b.status FROM bookings b JOIN customers c ON c.id = b.customer_id JOIN slots s ON s.id = b.slot_id ORDER BY b.id');",
+  "  foreach ($stmt as $r) { printf(\"#%d  %-16s  %s  [%s]\\n\", $r['id'], $r['full_name'], $r['starts_at'], $r['status']); }",
+  "} catch (Throwable $e) { fwrite(STDERR, 'trailer query failed: ' . $e->getMessage() . \"\\n\"); }",
+].join("\n");
+
+/** Strip a single leading `<?php`/`<?` tag so learner code can be concatenated. */
+function stripOpeningTag(code: string): string {
+  return code.replace(/^\s*<\?(php)?\s*/i, "");
+}
+
+export type PhpOptions = {
+  /** Seed an in-memory PDO booking database and print the table after running. */
+  withDb?: boolean;
+};
+
+export async function runPhp(code: string, opts: PhpOptions = {}): Promise<RunResult> {
   const start = performance.now();
   const lines: string[] = [];
+  const source = opts.withDb
+    ? `${PHP_DB_BOOTSTRAP}\n<?php\n${stripOpeningTag(code)}\n?>\n${PHP_DB_TRAILER}`
+    : code;
   try {
     const php = await loadPhp();
     const onOut = (e: { detail: string | number[] }) => lines.push(decode(e.detail));
     php.addEventListener("output", onOut);
     php.addEventListener("error", onOut);
-    const exit = await php.run(code);
+    const exit = await php.run(source);
     php.removeEventListener("output", onOut);
     php.removeEventListener("error", onOut);
-    return { ok: exit === 0, lines: lines.join("").split("\n"), ms: performance.now() - start };
+    const text = lines.join("");
+    return { ok: exit === 0, lines: text ? text.split("\n") : ["(no output)"], ms: performance.now() - start };
   } catch (err) {
     lines.push(err instanceof Error ? err.message : String(err));
     return { ok: false, lines, ms: performance.now() - start };
   }
 }
 
+/**
+ * The booking schema in MySQL dialect, seeded so the curriculum's SELECT/INSERT
+ * examples return rows. `runSql` maps the MySQL-isms onto SQLite for real
+ * execution, so this is the same schema a WJEC learner would write.
+ */
+const BOOKING_SCHEMA_MYSQL = `CREATE TABLE customers (id INT AUTO_INCREMENT PRIMARY KEY, full_name VARCHAR(80) NOT NULL);
+CREATE TABLE slots (id INT AUTO_INCREMENT PRIMARY KEY, starts_at DATETIME NOT NULL);
+CREATE TABLE bookings (id INT AUTO_INCREMENT PRIMARY KEY, customer_id INT, slot_id INT, status VARCHAR(20) DEFAULT 'pending');
+INSERT INTO customers (full_name) VALUES ('Ada Lovelace'), ('Grace Hopper');
+INSERT INTO slots (starts_at) VALUES ('2026-09-01 09:00'), ('2026-09-01 10:00');
+INSERT INTO bookings (customer_id, slot_id, status) VALUES (2, 2, 'confirmed');`;
+
+/**
+ * Positionally fill `?` placeholders with sample literals so a prepared
+ * statement's SQL can be executed standalone for demonstration. Returns the
+ * substituted SQL and whether any substitution happened.
+ */
+function fillPlaceholders(sql: string): { sql: string; substituted: boolean } {
+  const samples = ["1", "1", "'pending'", "'2026-09-01 09:00'"];
+  let i = 0;
+  let substituted = false;
+  const out = sql.replace(/\?/g, () => {
+    substituted = true;
+    return samples[i++] ?? "1";
+  });
+  return { sql: out, substituted };
+}
+
+/** Reset the SQLite database, seed the booking schema, then run `sql` for real. */
+export async function runSqlSeeded(sql: string): Promise<RunResult> {
+  await resetSql();
+  const seedResult = await runSql(BOOKING_SCHEMA_MYSQL);
+  if (!seedResult.ok) return seedResult;
+  const { sql: filled, substituted } = fillPlaceholders(sql);
+  const result = await runSql(filled);
+  if (substituted) {
+    result.lines = [
+      "note: prepared-statement placeholders (?) filled with sample values [1, 1] for this demo run",
+      ...result.lines,
+    ];
+  }
+  return result;
+}
+
 /* ------------------------------------------------------------------ facade */
 
 export type Engine = "python" | "sql" | "php" | "html";
+
+export type ExperienceRun = {
+  php?: RunResult | null;
+  sql?: RunResult | null;
+};
+
+/**
+ * Run an experience's PHP and SQL for real: PHP against a seeded PDO booking
+ * database, SQL against a seeded SQLite booking schema. This is what makes the
+ * chat's generative components executable rather than merely illustrative.
+ */
+export async function runExperience(input: { php?: string | null; sql?: string | null }): Promise<ExperienceRun> {
+  const [php, sql] = await Promise.all([
+    input.php ? runPhp(input.php, { withDb: true }) : Promise.resolve(null),
+    input.sql ? runSqlSeeded(input.sql) : Promise.resolve(null),
+  ]);
+  return { php, sql };
+}
 
 export function engineFor(path: string): Engine {
   if (path.endsWith(".py")) return "python";
