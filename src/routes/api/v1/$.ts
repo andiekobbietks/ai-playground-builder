@@ -76,7 +76,7 @@ export const Route = createFileRoute("/api/v1/$")({
           return result ? json(result) : notFound("Concept not found");
         }
         if (path === "/evidence/assess") {
-          const ids = Array.isArray(body["concept_id"]s) ? (body["concept_id"]s as string[]) : [];
+          const ids = Array.isArray(body["concept_ids"]) ? (body["concept_ids"] as string[]) : [];
           return json(assessEvidence(ids, String(body["body"] ?? ""), String(body["learner_id"] ?? "demo-learner")));
         }
 
