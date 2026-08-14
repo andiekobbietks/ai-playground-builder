@@ -8,7 +8,8 @@ import { useFocus, useStore } from "@/lib/store";
 /* ------------------------------------------------------------------ shell */
 
 const NAV = [
-  { to: "/", label: "playground", hint: "contracts + study" },
+  { to: "/", label: "home", hint: "what LAMPForge is" },
+  { to: "/playground", label: "playground", hint: "contracts + study" },
   { to: "/inspect", label: "inspector", hint: "MCP" },
   { to: "/pde", label: "pde", hint: "build" },
   { to: "/chat", label: "chat", hint: "pedagogy" },
