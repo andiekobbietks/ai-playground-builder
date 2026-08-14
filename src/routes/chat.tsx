@@ -41,7 +41,8 @@ import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { MODE_BLURB, conceptById, type Decision, type PedagogyMode } from "@/lib/lampforge";
-import { useFocus, useStore } from "@/lib/store";
+import { runExperience, type ExperienceRun } from "@/lib/runtimes";
+import { recordRun, useFocus, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -377,25 +378,7 @@ function ToolPart({
   const data = output as Record<string, unknown>;
 
   if (name === "build_experience" && data["component"]) {
-    const c = data["component"] as { html: string; label: string };
-    return (
-      <div className="space-y-2 rounded-md border border-border p-2">
-        <div className="flex items-center gap-2">
-          <Chip active>experience</Chip>
-          <span className="label-caps text-muted-foreground">{c.label}</span>
-          <Chip onClick={() => onInspect({ kind: "component", id: c.label, label: c.label })}>inspect</Chip>
-        </div>
-        <p className="text-body-sm">{String(data["narration"] ?? "")}</p>
-        <BootstrapFrame html={c.html} />
-        {data["php"] ? <Json value={data["php"]} className="max-h-64" /> : null}
-        {data["sql"] ? <Json value={data["sql"]} className="max-h-48" /> : null}
-        <div className="flex flex-wrap gap-1">
-          {(data["affordances"] as string[] | undefined)?.map((a) => (
-            <Chip key={a}>{a}</Chip>
-          ))}
-        </div>
-      </div>
-    );
+    return <ExperienceCard data={data} onInspect={onInspect} />;
   }
 
   if (name === "show_adr" && data["decision"]) {
@@ -467,5 +450,130 @@ function ToolPart({
   }
 
   return <Json value={output} className="max-h-64" />;
+}
+
+/* ------------------------------------------------------ live experience run */
+
+/**
+ * An experience is not just illustrated — it runs. The Bootstrap component
+ * renders in a sandboxed frame, and "Run PHP + SQL" executes the PHP over a
+ * seeded PDO database and the SQL over a seeded SQLite schema, in the browser,
+ * showing honest output. Every run is recorded against the learner model.
+ */
+function ExperienceCard({
+  data,
+  onInspect,
+}: {
+  data: Record<string, unknown>;
+  onInspect: (f: { kind: "component"; id: string; label?: string }) => void;
+}) {
+  const c = data["component"] as { html: string; label: string };
+  const php = data["php"] as string | undefined;
+  const sql = data["sql"] as string | undefined;
+  const [run, setRun] = useState<ExperienceRun | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const runNow = useCallback(async () => {
+    setBusy(true);
+    setRun(null);
+    try {
+      const res = await runExperience({ php: php ?? null, sql: sql ?? null });
+      setRun(res);
+      if (res.php)
+        recordRun({
+          file: `${c.label}.php`,
+          engine: "php",
+          ok: res.php.ok,
+          ms: res.php.ms,
+          summary: res.php.ok ? "PHP+PDO ran" : "PHP error",
+        });
+      if (res.sql)
+        recordRun({
+          file: `${c.label}.sql`,
+          engine: "sql",
+          ok: res.sql.ok,
+          ms: res.sql.ms,
+          summary: res.sql.table ? `${res.sql.table.rows.length} row(s)` : "executed",
+        });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Run failed");
+    } finally {
+      setBusy(false);
+    }
+  }, [php, sql, c.label]);
+
+  const canRun = Boolean(php || sql);
+
+  return (
+    <div className="space-y-2 rounded-md border border-border p-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Chip active>experience</Chip>
+        <span className="label-caps text-muted-foreground">{c.label}</span>
+        <Chip onClick={() => onInspect({ kind: "component", id: c.label, label: c.label })}>inspect</Chip>
+        {canRun ? (
+          <Chip onClick={busy ? undefined : () => void runNow()}>{busy ? "running…" : "run PHP + SQL"}</Chip>
+        ) : null}
+      </div>
+      <p className="text-body-sm">{String(data["narration"] ?? "")}</p>
+      <BootstrapFrame html={c.html} />
+      {php ? <Json value={php} className="max-h-64" /> : null}
+      {sql ? <Json value={sql} className="max-h-48" /> : null}
+
+      {run?.php ? (
+        <div>
+          <span className="label-caps text-muted-foreground">
+            php · php-wasm {run.php.ok ? "· ok" : "· error"} · {run.php.ms.toFixed(0)}ms
+          </span>
+          <pre className="mt-1 max-h-48 overflow-auto rounded-md bg-muted/40 p-2 font-mono text-[11px] leading-relaxed text-foreground/90">
+            {run.php.lines.filter((l) => l !== "").join("\n")}
+          </pre>
+        </div>
+      ) : null}
+
+      {run?.sql ? (
+        <div>
+          <span className="label-caps text-muted-foreground">
+            sql · sqlite {run.sql.ok ? "· ok" : "· error"} · {run.sql.ms.toFixed(0)}ms
+          </span>
+          {run.sql.table ? (
+            <div className="mt-1 overflow-auto rounded-md border border-border">
+              <table className="w-full border-collapse font-mono text-[11px]">
+                <thead>
+                  <tr>
+                    {run.sql.table.columns.map((col) => (
+                      <th key={col} className="border-b border-border px-2 py-1 text-left text-primary">
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {run.sql.table.rows.map((row, i) => (
+                    <tr key={i}>
+                      {row.map((v, j) => (
+                        <td key={j} className="border-b border-border/50 px-2 py-1 text-muted-foreground">
+                          {String(v ?? "NULL")}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <pre className="mt-1 max-h-40 overflow-auto rounded-md bg-muted/40 p-2 font-mono text-[11px] leading-relaxed text-foreground/90">
+              {run.sql.lines.filter((l) => l !== "").join("\n")}
+            </pre>
+          )}
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap gap-1">
+        {(data["affordances"] as string[] | undefined)?.map((a) => (
+          <Chip key={a}>{a}</Chip>
+        ))}
+      </div>
+    </div>
+  );
 }
 

@@ -1,16 +1,25 @@
 """LAMPForge MCP server, written with the official Python MCP SDK.
 
-    pip install "mcp[cli]" pydantic fastapi
-    python -m lampforge.mcp_server            # stdio
-    mcp dev python/lampforge/mcp_server.py    # official Inspector
+    pip install -e python                          # installs the pinned SDK
+    python -m lampforge.mcp_server                 # stdio (official Inspector)
+    python -m lampforge.mcp_server --http          # Streamable HTTP on :8000/mcp
+    mcp dev python/lampforge/mcp_server.py         # official Inspector, stdio
+
+Connect the mcp-use inspector (npx @mcp-use/inspector) or the official
+Inspector to the HTTP transport at http://localhost:8000/mcp — the same
+Streamable HTTP grammar the app's edge endpoint (/api/public/mcp) speaks.
 
 Every tool's input schema is a Pydantic model from `tool_io.py`, so this server
 and the HTTP API expose the same grammar. The app's edge MCP endpoint mirrors
 this tool surface exactly; this file is the canonical implementation.
+
+The SDK pin lives in `pyproject.toml`: FastMCP here targets the mcp 1.x API
+(`mcp.server.fastmcp`), which mcp 2.0.0 relocated, so 2.x is excluded there.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 
 from mcp.server.fastmcp import FastMCP
@@ -97,5 +106,29 @@ def teach(concept_id: str, mode: str = "we_do") -> str:
     )
 
 
+def main() -> None:
+    """Run over stdio by default, or Streamable HTTP with --http.
+
+    Both transports serve the identical tool surface; the HTTP transport is
+    what a browser inspector (official or mcp-use) connects to.
+    """
+    parser = argparse.ArgumentParser(description="LAMPForge MCP server")
+    parser.add_argument(
+        "--http",
+        action="store_true",
+        help="Serve Streamable HTTP at http://<host>:<port>/mcp instead of stdio.",
+    )
+    parser.add_argument("--host", default="127.0.0.1", help="HTTP host (default 127.0.0.1).")
+    parser.add_argument("--port", type=int, default=8000, help="HTTP port (default 8000).")
+    args = parser.parse_args()
+
+    if args.http:
+        mcp.settings.host = args.host
+        mcp.settings.port = args.port
+        mcp.run(transport="streamable-http")
+    else:
+        mcp.run()
+
+
 if __name__ == "__main__":
-    mcp.run()
+    main()
