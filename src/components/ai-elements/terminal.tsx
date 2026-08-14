@@ -239,7 +239,7 @@ export const Terminal = ({
   ...props
 }: TerminalProps) => {
   const contextValue = useMemo(
-    () => ({ autoScroll, isStreaming, onClear, output }),
+    () => ({ autoScroll, isStreaming, onClear, output }) as TerminalContextType,
     [autoScroll, isStreaming, onClear, output]
   );
 
