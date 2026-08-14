@@ -146,7 +146,8 @@ type PhpApi = {
 
 const loadPhp = once(async (): Promise<PhpApi> => {
   assertBrowser("PHP");
-  const mod = (await import(/* @vite-ignore */ "https://cdn.jsdelivr.net/npm/php-wasm@0.1.0/PhpWeb.mjs")) as {
+  const url = "https://cdn.jsdelivr.net/npm/php-wasm@0.1.0/PhpWeb.mjs";
+  const mod = (await import(/* @vite-ignore */ url)) as {
     PhpWeb: new (o?: Record<string, unknown>) => PhpApi;
   };
   const php = new mod.PhpWeb();
