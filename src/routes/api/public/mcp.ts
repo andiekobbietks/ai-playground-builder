@@ -45,7 +45,7 @@ const text = (value: unknown) => ({
   structuredContent: value as Record<string, unknown>,
 });
 
-type Args = Record<string, never> & Record<string, unknown>;
+type Args = Record<string, unknown>;
 
 function callTool(name: string, a: Args) {
   switch (name) {
