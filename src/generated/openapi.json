@@ -1,0 +1,1357 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LAMPForge API",
+    "description": "The grammar of the learning experience. Every operation below is a projection of the same Pydantic model that drives the MCP tools, the chat tools and the PDE.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/concepts": {
+      "get": {
+        "tags": [
+          "concepts"
+        ],
+        "summary": "List Concepts",
+        "description": "List the concepts in the curriculum graph.",
+        "operationId": "listConcepts",
+        "parameters": [
+          {
+            "name": "stack",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Stack"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by stack layer.",
+              "title": "Stack"
+            },
+            "description": "Filter by stack layer."
+          },
+          {
+            "name": "depth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Depth"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by depth.",
+              "title": "Depth"
+            },
+            "description": "Filter by depth."
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Free-text match.",
+              "title": "Query"
+            },
+            "description": "Free-text match."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Concept"
+                  },
+                  "title": "Response Listconcepts"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/concepts/{concept_id}": {
+      "get": {
+        "tags": [
+          "concepts"
+        ],
+        "summary": "Get Concept",
+        "description": "Fetch one concept with its vocabulary, errors and relationships.",
+        "operationId": "getConcept",
+        "parameters": [
+          {
+            "name": "concept_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Concept Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Concept"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/adrs": {
+      "get": {
+        "tags": [
+          "adrs"
+        ],
+        "summary": "List Adrs",
+        "description": "List Architectural Decision Records.",
+        "operationId": "listAdrs",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Decision"
+                  },
+                  "title": "Response Listadrs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/adrs/{decision_id}": {
+      "get": {
+        "tags": [
+          "adrs"
+        ],
+        "summary": "Get Adr",
+        "description": "Fetch a full ADR: context, decision, alternatives, rationale, consequences.",
+        "operationId": "getAdr",
+        "parameters": [
+          {
+            "name": "decision_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Decision Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Decision"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/adrs/{decision_id}/evidence": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Get Adr Evidence",
+        "description": "The evidence attached to a decision.",
+        "operationId": "getAdrEvidence",
+        "parameters": [
+          {
+            "name": "decision_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Decision Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Evidence"
+                  },
+                  "title": "Response Getadrevidence"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/experiences": {
+      "post": {
+        "tags": [
+          "experiences"
+        ],
+        "summary": "Create Experience",
+        "description": "Turn an intent into a structured experience: narration, renderable component, PHP and SQL.",
+        "operationId": "createExperience",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExperienceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Experience"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/explain": {
+      "post": {
+        "tags": [
+          "experiences"
+        ],
+        "summary": "Explain",
+        "description": "Explain a concept at the learner's current pedagogy mode.",
+        "operationId": "explainConcept",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExplainInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Explainconcept"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/learner/{learner_id}": {
+      "get": {
+        "tags": [
+          "learner"
+        ],
+        "summary": "Get Learner",
+        "description": "The learner model: mode, mastery, retrieval history and interaction signals.",
+        "operationId": "getLearnerState",
+        "parameters": [
+          {
+            "name": "learner_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Learner Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearnerState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evidence/assess": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Assess Evidence",
+        "description": "Score a piece of learner evidence against the concepts it claims to demonstrate.",
+        "operationId": "assessEvidence",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssessEvidenceInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "List Tasks",
+        "description": "The task ladder for the current project.",
+        "operationId": "listTasks",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Task"
+                  },
+                  "type": "array",
+                  "title": "Response Listtasks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "List Projects",
+        "description": "Learner projects and the decisions attached to them.",
+        "operationId": "listProjects",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Project"
+                  },
+                  "type": "array",
+                  "title": "Response Listprojects"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AssessEvidenceInput": {
+        "properties": {
+          "concept_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Concept Ids"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body",
+            "description": "What the learner wrote, built or said."
+          },
+          "learner_id": {
+            "type": "string",
+            "title": "Learner Id",
+            "default": "demo-learner"
+          }
+        },
+        "type": "object",
+        "required": [
+          "concept_ids",
+          "body"
+        ],
+        "title": "AssessEvidenceInput"
+      },
+      "AssessmentResult": {
+        "properties": {
+          "concept_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Concept Ids"
+          },
+          "verdict": {
+            "type": "string",
+            "title": "Verdict",
+            "description": "secure | developing | not_evidenced"
+          },
+          "reasoning": {
+            "type": "string",
+            "title": "Reasoning"
+          },
+          "next_mode": {
+            "$ref": "#/components/schemas/PedagogyMode"
+          },
+          "suggested_decision_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Decision Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "concept_ids",
+          "verdict",
+          "reasoning",
+          "next_mode"
+        ],
+        "title": "AssessmentResult"
+      },
+      "Concept": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Stable slug, e.g. 'crud'."
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "stack": {
+            "$ref": "#/components/schemas/Stack"
+          },
+          "depth": {
+            "$ref": "#/components/schemas/Depth"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "vocabulary": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Vocabulary"
+          },
+          "common_errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Common Errors"
+          },
+          "code_example": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code Example"
+          },
+          "relationships": {
+            "items": {
+              "$ref": "#/components/schemas/Relationship"
+            },
+            "type": "array",
+            "title": "Relationships"
+          },
+          "wjec_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wjec Reference",
+            "description": "WJEC Unit 4 specification reference."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "stack",
+          "depth",
+          "summary"
+        ],
+        "title": "Concept"
+      },
+      "Decision": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "e.g. 'ADR-018'."
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DecisionStatus"
+          },
+          "type": {
+            "$ref": "#/components/schemas/DecisionType"
+          },
+          "depth": {
+            "$ref": "#/components/schemas/Depth"
+          },
+          "project_id": {
+            "type": "string",
+            "title": "Project Id"
+          },
+          "context": {
+            "type": "string",
+            "title": "Context"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "alternatives": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Alternatives"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale"
+          },
+          "consequences": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Consequences"
+          },
+          "evidence_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Ids"
+          },
+          "concept_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Concept Ids"
+          },
+          "word_count_target": {
+            "type": "integer",
+            "title": "Word Count Target",
+            "description": "Suggested NEA word budget for this decision type.",
+            "default": 250
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "status",
+          "type",
+          "depth",
+          "project_id",
+          "context",
+          "decision",
+          "rationale"
+        ],
+        "title": "Decision",
+        "description": "An Architectural Decision Record, authored by or with the learner."
+      },
+      "DecisionStatus": {
+        "type": "string",
+        "enum": [
+          "proposed",
+          "accepted",
+          "superseded"
+        ],
+        "title": "DecisionStatus"
+      },
+      "DecisionType": {
+        "type": "string",
+        "enum": [
+          "data_architecture",
+          "interface_design",
+          "algorithm",
+          "security",
+          "planning",
+          "testing"
+        ],
+        "title": "DecisionType"
+      },
+      "Depth": {
+        "type": "string",
+        "enum": [
+          "foundation",
+          "intermediate",
+          "advanced"
+        ],
+        "title": "Depth"
+      },
+      "Evidence": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EvidenceKind"
+          },
+          "concept_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Concept Ids"
+          },
+          "decision_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Id"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "body"
+        ],
+        "title": "Evidence"
+      },
+      "EvidenceKind": {
+        "type": "string",
+        "enum": [
+          "code",
+          "schema",
+          "test",
+          "explanation",
+          "artefact",
+          "interaction"
+        ],
+        "title": "EvidenceKind"
+      },
+      "Experience": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/Intent"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/PedagogyMode"
+          },
+          "narration": {
+            "type": "string",
+            "title": "Narration",
+            "description": "What the runtime says while presenting this."
+          },
+          "component": {
+            "$ref": "#/components/schemas/UIComponent"
+          },
+          "php": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Php"
+          },
+          "sql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sql"
+          },
+          "concept_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Concept Ids"
+          },
+          "decision_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Id"
+          },
+          "follow_up_questions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Follow Up Questions"
+          },
+          "affordances": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affordances"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "intent",
+          "mode",
+          "narration",
+          "component"
+        ],
+        "title": "Experience",
+        "description": "A structured experience description \u2014 the multi-representation object."
+      },
+      "ExperienceRequest": {
+        "properties": {
+          "intent": {
+            "type": "string",
+            "title": "Intent",
+            "description": "Natural language, e.g. 'Create a booking form.'"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/PedagogyMode",
+            "default": "we_do"
+          },
+          "concept_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Concept Ids"
+          },
+          "learner_id": {
+            "type": "string",
+            "title": "Learner Id",
+            "default": "demo-learner"
+          }
+        },
+        "type": "object",
+        "required": [
+          "intent"
+        ],
+        "title": "ExperienceRequest",
+        "description": "What a learner asks the runtime to produce."
+      },
+      "ExplainInput": {
+        "properties": {
+          "concept_id": {
+            "type": "string",
+            "title": "Concept Id"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/PedagogyMode",
+            "default": "we_do"
+          },
+          "learner_id": {
+            "type": "string",
+            "title": "Learner Id",
+            "default": "demo-learner"
+          }
+        },
+        "type": "object",
+        "required": [
+          "concept_id"
+        ],
+        "title": "ExplainInput"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Intent": {
+        "properties": {
+          "verb": {
+            "type": "string",
+            "title": "Verb",
+            "description": "explain | build | inspect | assess | trace | compare"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "description": "Concept, ADR, artefact or file id."
+          },
+          "mode": {
+            "$ref": "#/components/schemas/PedagogyMode",
+            "default": "we_do"
+          },
+          "surface": {
+            "type": "string",
+            "title": "Surface",
+            "description": "chat | voice | swagger | mcp | pde",
+            "default": "chat"
+          },
+          "raw": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw"
+          }
+        },
+        "type": "object",
+        "required": [
+          "verb",
+          "subject"
+        ],
+        "title": "Intent",
+        "description": "The parsed shape of anything a learner asks, from any surface."
+      },
+      "LearnerState": {
+        "properties": {
+          "learner_id": {
+            "type": "string",
+            "title": "Learner Id"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/PedagogyMode"
+          },
+          "accuracy": {
+            "type": "number",
+            "title": "Accuracy",
+            "description": "Rolling proportion correct, 0-1."
+          },
+          "median_response_ms": {
+            "type": "integer",
+            "title": "Median Response Ms"
+          },
+          "retries": {
+            "type": "integer",
+            "title": "Retries"
+          },
+          "hint_requests": {
+            "type": "integer",
+            "title": "Hint Requests"
+          },
+          "idle_seconds": {
+            "type": "integer",
+            "title": "Idle Seconds"
+          },
+          "successful_retrievals": {
+            "type": "integer",
+            "title": "Successful Retrievals"
+          },
+          "failed_retrievals": {
+            "type": "integer",
+            "title": "Failed Retrievals"
+          },
+          "seconds_since_last_exposure": {
+            "type": "integer",
+            "title": "Seconds Since Last Exposure"
+          },
+          "task_difficulty": {
+            "type": "integer",
+            "title": "Task Difficulty"
+          },
+          "mastered_concept_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Mastered Concept Ids"
+          },
+          "emerging_concept_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Emerging Concept Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "learner_id",
+          "mode",
+          "accuracy",
+          "median_response_ms",
+          "retries",
+          "hint_requests",
+          "idle_seconds",
+          "successful_retrievals",
+          "failed_retrievals",
+          "seconds_since_last_exposure",
+          "task_difficulty"
+        ],
+        "title": "LearnerState"
+      },
+      "PedagogyMode": {
+        "type": "string",
+        "enum": [
+          "i_do",
+          "we_do",
+          "you_do"
+        ],
+        "title": "PedagogyMode",
+        "description": "Gradual release of responsibility."
+      },
+      "Project": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "brief": {
+            "type": "string",
+            "title": "Brief"
+          },
+          "concept_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Concept Ids"
+          },
+          "decision_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Decision Ids"
+          },
+          "files": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "brief"
+        ],
+        "title": "Project"
+      },
+      "RelationKind": {
+        "type": "string",
+        "enum": [
+          "requires",
+          "uses",
+          "demonstrated_by",
+          "evidenced_by",
+          "assessed_against",
+          "supersedes"
+        ],
+        "title": "RelationKind"
+      },
+      "Relationship": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/RelationKind"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "Stable id of the related object."
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "target"
+        ],
+        "title": "Relationship",
+        "description": "A typed edge in the learning graph."
+      },
+      "Stack": {
+        "type": "string",
+        "enum": [
+          "html",
+          "css",
+          "bootstrap",
+          "php",
+          "mysql",
+          "javascript",
+          "architecture"
+        ],
+        "title": "Stack"
+      },
+      "Task": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          },
+          "concept_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Concept Ids"
+          },
+          "difficulty": {
+            "type": "integer",
+            "title": "Difficulty",
+            "description": "1 (recall) to 5 (transfer)."
+          },
+          "mode": {
+            "$ref": "#/components/schemas/PedagogyMode"
+          },
+          "success_criteria": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Success Criteria"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "prompt",
+          "difficulty",
+          "mode"
+        ],
+        "title": "Task"
+      },
+      "UIComponent": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "bootstrap_classes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Bootstrap Classes"
+          },
+          "html": {
+            "type": "string",
+            "title": "Html"
+          },
+          "concept_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Concept Ids"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "html"
+        ],
+        "title": "UIComponent",
+        "description": "A renderable Bootstrap artefact returned by an experience."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

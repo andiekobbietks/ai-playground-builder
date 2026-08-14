@@ -1,0 +1,239 @@
+[
+  {
+    "name": "list_concepts",
+    "title": "List concepts",
+    "description": "List the LAMP concepts in the curriculum graph, optionally filtered by stack or depth.",
+    "readOnly": true,
+    "inputSchema": {
+      "$defs": {
+        "Depth": {
+          "enum": [
+            "foundation",
+            "intermediate",
+            "advanced"
+          ],
+          "title": "Depth",
+          "type": "string"
+        },
+        "Stack": {
+          "enum": [
+            "html",
+            "css",
+            "bootstrap",
+            "php",
+            "mysql",
+            "javascript",
+            "architecture"
+          ],
+          "title": "Stack",
+          "type": "string"
+        }
+      },
+      "properties": {
+        "stack": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stack"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Filter by stack layer."
+        },
+        "depth": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Depth"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Filter by depth."
+        },
+        "query": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Free-text match on title and summary.",
+          "title": "Query"
+        }
+      },
+      "title": "ListConceptsInput",
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_adr",
+    "title": "Get an ADR",
+    "description": "Fetch a full Architectural Decision Record with its evidence and concept links.",
+    "readOnly": true,
+    "inputSchema": {
+      "properties": {
+        "id": {
+          "description": "ADR id, e.g. 'ADR-018'.",
+          "title": "Id",
+          "type": "string"
+        },
+        "include_evidence": {
+          "default": true,
+          "title": "Include Evidence",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "GetAdrInput",
+      "type": "object"
+    }
+  },
+  {
+    "name": "create_experience",
+    "title": "Create an experience",
+    "description": "Turn an intent into a structured experience: narration, a renderable Bootstrap component, PHP and SQL.",
+    "readOnly": false,
+    "inputSchema": {
+      "$defs": {
+        "PedagogyMode": {
+          "description": "Gradual release of responsibility.",
+          "enum": [
+            "i_do",
+            "we_do",
+            "you_do"
+          ],
+          "title": "PedagogyMode",
+          "type": "string"
+        }
+      },
+      "description": "What a learner asks the runtime to produce.",
+      "properties": {
+        "intent": {
+          "description": "Natural language, e.g. 'Create a booking form.'",
+          "title": "Intent",
+          "type": "string"
+        },
+        "mode": {
+          "$ref": "#/$defs/PedagogyMode",
+          "default": "we_do"
+        },
+        "concept_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Concept Ids",
+          "type": "array"
+        },
+        "learner_id": {
+          "default": "demo-learner",
+          "title": "Learner Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "intent"
+      ],
+      "title": "ExperienceRequest",
+      "type": "object"
+    }
+  },
+  {
+    "name": "explain",
+    "title": "Explain a concept",
+    "description": "Explain a concept at the learner's current pedagogy mode, with vocabulary and common errors.",
+    "readOnly": true,
+    "inputSchema": {
+      "$defs": {
+        "PedagogyMode": {
+          "description": "Gradual release of responsibility.",
+          "enum": [
+            "i_do",
+            "we_do",
+            "you_do"
+          ],
+          "title": "PedagogyMode",
+          "type": "string"
+        }
+      },
+      "properties": {
+        "concept_id": {
+          "title": "Concept Id",
+          "type": "string"
+        },
+        "mode": {
+          "$ref": "#/$defs/PedagogyMode",
+          "default": "we_do"
+        },
+        "learner_id": {
+          "default": "demo-learner",
+          "title": "Learner Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "concept_id"
+      ],
+      "title": "ExplainInput",
+      "type": "object"
+    }
+  },
+  {
+    "name": "assess_evidence",
+    "title": "Assess evidence",
+    "description": "Score a piece of learner evidence against the concepts it claims to demonstrate.",
+    "readOnly": false,
+    "inputSchema": {
+      "properties": {
+        "concept_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Concept Ids",
+          "type": "array"
+        },
+        "body": {
+          "description": "What the learner wrote, built or said.",
+          "title": "Body",
+          "type": "string"
+        },
+        "learner_id": {
+          "default": "demo-learner",
+          "title": "Learner Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "concept_ids",
+        "body"
+      ],
+      "title": "AssessEvidenceInput",
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_learner_state",
+    "title": "Get learner state",
+    "description": "Return the current learner model: mode, mastery, retrieval history and interaction signals.",
+    "readOnly": true,
+    "inputSchema": {
+      "properties": {
+        "learner_id": {
+          "default": "demo-learner",
+          "title": "Learner Id",
+          "type": "string"
+        }
+      },
+      "title": "GetLearnerStateInput",
+      "type": "object"
+    }
+  }
+]
