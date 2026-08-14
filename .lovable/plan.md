@@ -1,53 +1,58 @@
-# LAMPForge — Swagger, MCP Inspector, PDE and Pedagogical Chat
+# LAMPForge — Swagger playground, MCP Inspector, PDE and Pedagogical Chat
 
-One app, four connected surfaces over a single canonical model. Everything in the app is a projection of the same objects: concepts, ADRs, tasks, evidence, learner state.
+Four routes, one canonical model. The model is **Pydantic**, not TypeScript/Zod — Python is the source of truth and everything else is a projection of it.
 
-## The four surfaces
+## Canonical model — Pydantic
 
-**1. EXPLORE — the enterprise Swagger**
-A hand-built OpenAPI 3.1 spec for the LAMPForge API, rendered in a custom Swagger UI (not the stock widget) so it can carry pedagogy. Every operation card has:
-- schema view, example request/response
-- a real **Try it out** that hits live endpoints in this app and returns actual JSON
-- the links layer: `View JSON Schema`, `Open OpenAPI`, `View ADR`, `Ask about this decision`
+`python/lampforge/models.py` defines `Concept`, `Skill`, `Task`, `Intent`, `Evidence`, `Decision (ADR)`, `Tool`, `UIComponent`, `Relationship`, `LearnerState`, `Experience`.
 
-Operation groups: `/concepts`, `/adrs`, `/experiences`, `/learner`, `/evidence`, `/projects`, `/mcp`.
+From those Pydantic models we generate, and commit into the app:
+- `openapi.json` — the enterprise OpenAPI 3.1 contract (FastAPI's `.openapi()`)
+- `schemas.json` — per-model JSON Schema (`model_json_schema()`)
+- `seed.json` — the WJEC Unit 4 booking-system content
 
-`POST /experiences` is the special one: it returns a **structured experience description**, and the playground renders it as live Bootstrap UI beside the raw JSON — endpoint → structured experience → rendered UI → interaction → underlying response.
+`python/lampforge/mcp_server.py` is the real **MCP Python SDK** server over the same models. `python/lampforge/api.py` is the FastAPI app. Both runnable locally by you; both readable inside the app.
 
-**2. INSPECT — the MCP Inspector**
-A faithful rebuild of the open-source MCP Inspector layout (server pane, connection status, tabs for Tools / Resources / Prompts, request/response history, JSON-RPC log) wired to a real MCP server exposed by this app at `/api/public/mcp` over Streamable HTTP. Tools: `list_concepts`, `get_adr`, `create_experience`, `explain`, `assess_evidence`, `get_learner_state`.
+The TanStack app never re-declares the domain in TS. It imports the generated JSON and derives types from it, so the grammar has exactly one author.
 
-Alongside it, the same server written with the **Python MCP SDK** lives in `mcp-python/` as the canonical, copyable artefact — readable inside the app's file viewer, runnable locally by you, and identical in tool surface to the live TypeScript one.
+## Routes
 
-**3. BUILD — the PDE (Pedagogical Development Environment)**
-The AI-IDE chassis, made pedagogical: file tree, code editor, live preview iframe of the learner's HTML/CSS/Bootstrap artefact, a streaming terminal pane, task queue, and checkpoints. What makes it a PDE rather than an IDE: every action can emit an ADR draft, the assistant refuses to just hand over code when the learner's mode is YOU DO, and each artefact links back to the decision that produced it.
+**`/` — the Swagger playground (full contracts + study experience)**
+Custom-built Swagger UI over the generated `openapi.json`, not the stock widget, so it carries pedagogy:
+- operation cards grouped by tag: `/concepts`, `/adrs`, `/experiences`, `/learner`, `/evidence`, `/projects`
+- schema explorer showing the Pydantic-generated JSON Schema, with model relationships
+- **Try it out** hitting live edge endpoints in this app that mirror the FastAPI handlers, returning real JSON
+- the links layer on every operation and ADR: `View JSON Schema`, `Open OpenAPI`, `View ADR`, `Inspect implementation`, `Ask about this decision`
+- `POST /experiences` returns a structured experience description, and the playground renders it as **live Bootstrap UI beside the raw JSON**: endpoint → structured experience → rendered UI → interaction → underlying response
+- ADR view: Context / Decision / Alternatives / Rationale / Consequences / Evidence / Learning connection, with the evidence graph as a navigable set of links
 
-PHP/MySQL are represented as authored files plus a simulated request/response trace (no PHP runtime in the browser) so the WJEC transactional-website shape is teachable end to end. Project export ships a zipped Bootstrap + PHP + `schema.sql` skeleton.
+**`/inspect` — MCP Inspector**
+Rebuild of the open-source MCP Inspector layout: server/connection pane, Tools / Resources / Prompts tabs, argument forms generated from the tool schemas, response viewer, JSON-RPC history log. It connects to a live MCP endpoint the app serves at `/api/public/mcp`, whose tool surface is generated from the same Pydantic schemas as the Python server (`list_concepts`, `get_adr`, `create_experience`, `explain`, `assess_evidence`, `get_learner_state`). The Python server file is viewable side by side as the canonical implementation.
 
-**4. CHAT — conversational pedagogy**
-Vercel AI SDK UI chat streaming from the Lovable AI Gateway (Google Gemini by default). This is where I DO → WE DO → YOU DO lives:
-- an explicit mode selector, plus automatic mode transitions driven by learner state
-- tool calls that render **generative UI inline**: a rendered Bootstrap component, an ADR card, a Swagger operation, a code diff, an ERD
-- "inspect it, manipulate it, ask why it works, trace it back to the code, and connect it to the decision that produced it" — every inline artefact carries those affordances
-- the learner model tracked from the signals you listed (accuracy, response time, retries, hint requests, idle duration, retrieval success, time since last exposure, task difficulty)
+**`/pde` — Pedagogical Development Environment**
+Built from the AI Elements IDE example primitives: `FileTree`, `CodeBlock`, `Terminal`, `Plan`, `Queue`/`Task`, `Checkpoint`, `Conversation`, `PromptInput` — plus a live preview iframe of the learner's Bootstrap artefact.
+What makes it a PDE rather than an IDE: the assistant's behaviour is bound to the learner's mode (I DO / WE DO / YOU DO), every accepted change can emit an ADR draft against the Pydantic `Decision` model, checkpoints are pedagogical states not just conversation states, and each artefact links back to the decision that produced it.
+PHP/MySQL are authored files plus a simulated request/response and query trace. Export ships a zipped Bootstrap + PHP + `schema.sql` skeleton.
 
-## Shared spine
-
-- **Canonical domain model** in TypeScript + Zod: `Concept`, `Skill`, `Task`, `Intent`, `Evidence`, `Decision (ADR)`, `Tool`, `UIComponent`, `Relationship`. The OpenAPI spec, the MCP tool schemas and the chat tools are all generated from these same schemas — one grammar, five projections.
-- **Seed content**: WJEC Unit 4 LAMP vocabulary — a booking-system project with ~20 concepts and ~18 worked ADRs, so every surface has real material on first load.
-- **Design**: dark technical workbench, monospace accents, no purple-gradient look. Left rail switches surface; the object you're inspecting persists across surfaces.
+**`/chat` — conversational pedagogy**
+Vercel AI SDK UI (`useChat`, `DefaultChatTransport`) streaming from a server route via the Lovable AI Gateway.
+- explicit mode selector plus automatic I DO → WE DO → YOU DO transitions driven by learner state
+- server-side tools whose schemas come from the generated Pydantic JSON Schema, rendered as **inline generative UI**: a live Bootstrap component, an ADR card, a Swagger operation, a code diff, an ERD — each carrying "inspect it, manipulate it, ask why it works, trace it back to the code, connect it to the decision that produced it"
+- streamed reasoning shown as the teaching move, not hidden
+- learner model updated from accuracy, response time, retries, hint requests, idle duration, retrieval success, time since last exposure, task difficulty
 
 ## Technical notes
 
-- TanStack Start, TypeScript. Server routes under `src/routes/api/` back the Swagger Try-it-out and the MCP endpoint; chat streams from a server route via the AI SDK.
-- Live MCP is TypeScript (`src/lib/mcp/`); `mcp-python/` holds the equivalent `mcp` Python SDK server as source-of-truth artefact and reference implementation.
-- Lovable Cloud/Supabase is currently disabled for your account, so this build keeps learner state, ADRs and projects in browser storage behind a single `store` interface. When you enable Cloud (or wire your own Supabase), that interface swaps to real persistence without touching the surfaces.
-- Requires a Lovable AI key for the chat; I'll provision it as part of the build.
+- Chat/PDE UI is built from installed **AI Elements** components (`conversation`, `message`, `prompt-input`, `tool`, `file-tree`, `code-block`, `terminal`, `plan`, `queue`, `task`, `checkpoint`, `shimmer`).
+- The published app runs on the TypeScript edge runtime, so the live "Try it out" and MCP endpoints are edge handlers driven by the generated contract; the Python FastAPI + MCP SDK server is the canonical, runnable reference in `python/`. A single generation script keeps them in lockstep.
+- State (learner model, ADRs, projects, chat) sits behind one `store` interface, backed by browser storage for now; when you wire your Supabase it swaps at that interface with no change to the four surfaces.
+- Needs a Lovable AI key for the chat and PDE assistant — provisioned during the build.
+- Design: dark technical workbench, monospace accents, no generic AI-purple. Top rail switches route; the object under inspection persists across routes.
 
 ## Build order
 
-1. Domain model + seed content + app shell with the four-surface rail
-2. OpenAPI spec + Swagger surface + live Try-it-out endpoints
-3. MCP server (TS live + Python source) + Inspector surface
-4. Chat surface with pedagogy modes and inline generative UI
-5. PDE surface: file tree, editor, preview, terminal, checkpoints, ADR emission, zip export
+1. `python/` Pydantic models + FastAPI + MCP server; generation script → `openapi.json`, `schemas.json`, `seed.json`
+2. `/` Swagger playground with live Try-it-out and the ADR/links layer
+3. `/inspect` MCP Inspector + live `/api/public/mcp`
+4. `/chat` AI SDK UI with pedagogy modes and inline generative UI
+5. `/pde` file tree, editor, preview, terminal, plan/queue, checkpoints, ADR emission, zip export
