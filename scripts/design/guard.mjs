@@ -65,7 +65,7 @@ export function guard() {
   for (const scanRoot of scanRoots) {
     for (const file of walk(join(root, scanRoot))) {
       const rel = relative(root, file);
-      if (rel.endsWith("src/styles.css")) continue; // the token bridge lives here
+      if (SKIP_FILES.has(rel)) continue;
       const lines = readFileSync(file, "utf8").split("\n");
       lines.forEach((line, i) => {
         if (line.includes("design-allow")) return;
