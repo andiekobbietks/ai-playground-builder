@@ -1,0 +1,60 @@
+/* ------------------------------------------------------------------------
+ * GENERATED FILE — DO NOT EDIT.
+ * Source: DESIGN.md (root)   Emitter: @google/design.md export css-tailwind
+ * Regenerate: npm run design:sync
+ * ---------------------------------------------------------------------- */
+@theme {
+  --color-background: #0b0d10;
+  --color-surface: #12151a;
+  --color-surface-raised: #171b21;
+  --color-border: #262b33;
+  --color-input: #1c2027;
+  --color-primary: #f2a65a;
+  --color-on-primary: #1a1206;
+  --color-secondary: #5ba8d6;
+  --color-tertiary: #e2593f;
+  --color-foreground: #e8eaed;
+  --color-muted-foreground: #97a0ae;
+  --color-mode-i-do: #f2a65a;
+  --color-mode-we-do: #42c6a0;
+  --color-mode-you-do: #a3c93a;
+  --color-method-get: #5ba8d6;
+  --color-method-post: #f2a65a;
+  --color-destructive: #e2593f;
+  --color-success: #42c6a0;
+  --font-h1: "IBM Plex Sans";
+  --font-h2: "IBM Plex Sans";
+  --font-body-md: "IBM Plex Sans";
+  --font-body-sm: "IBM Plex Sans";
+  --font-code: "JetBrains Mono";
+  --font-label-caps: "JetBrains Mono";
+  --text-h1: 1.75rem;
+  --text-h2: 1.125rem;
+  --text-body-md: 0.875rem;
+  --text-body-sm: 0.8125rem;
+  --text-code: 0.6875rem;
+  --text-label-caps: 0.6875rem;
+  --leading-h1: 2.125rem;
+  --leading-h2: 1.625rem;
+  --leading-body-md: 1.375rem;
+  --leading-body-sm: 1.25rem;
+  --leading-code: 1.125rem;
+  --leading-label-caps: 1rem;
+  --tracking-h1: -0.02em;
+  --tracking-h2: -0.01em;
+  --tracking-label-caps: 0.12em;
+  --font-weight-h1: 600;
+  --font-weight-h2: 600;
+  --font-weight-body-md: 400;
+  --font-weight-body-sm: 400;
+  --font-weight-code: 400;
+  --font-weight-label-caps: 600;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+}

@@ -140,7 +140,7 @@ export const Route = createFileRoute("/api/chat")({
         });
 
         return createUIMessageStreamResponse({
-          stream: toUIMessageStream({ stream: result.stream, originalMessages: messages }),
+          stream: toUIMessageStream({ stream: result.stream, originalMessages: messages, sendReasoning: true, sendSources: true }),
         });
       },
     },

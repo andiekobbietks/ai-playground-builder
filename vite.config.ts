@@ -6,10 +6,17 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+// Headless design-system enforcement: keeps src/generated/design.tokens.css in
+// lockstep with DESIGN.md and reports hardcoded design values while you build.
+import { designMdPlugin } from "./scripts/design/vite-plugin-design-md.mjs";
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+  },
+  vite: {
+    plugins: [designMdPlugin()],
   },
 });

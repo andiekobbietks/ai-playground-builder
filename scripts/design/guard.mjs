@@ -15,6 +15,9 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const scanRoots = ["src"];
 const SKIP_DIRS = new Set(["generated", "ui", "node_modules", ".git"]);
+// src/lib/error-page.ts renders a standalone HTML document when the SSR shell
+// itself fails — it cannot depend on the stylesheet, so it inlines its colours.
+const SKIP_FILES = new Set(["src/lib/error-page.ts", "src/styles.css"]);
 const EXT = /\.(tsx|ts|css)$/;
 
 const RULES = [
@@ -62,7 +65,7 @@ export function guard() {
   for (const scanRoot of scanRoots) {
     for (const file of walk(join(root, scanRoot))) {
       const rel = relative(root, file);
-      if (rel.endsWith("src/styles.css")) continue; // the token bridge lives here
+      if (SKIP_FILES.has(rel)) continue;
       const lines = readFileSync(file, "utf8").split("\n");
       lines.forEach((line, i) => {
         if (line.includes("design-allow")) return;
