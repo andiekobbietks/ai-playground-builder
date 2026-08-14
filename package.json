@@ -9,7 +9,10 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "design:lint": "designmd lint DESIGN.md",
+    "design:sync": "node scripts/design/sync.mjs",
+    "design:check": "node scripts/design/check.mjs --ci"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.41",
