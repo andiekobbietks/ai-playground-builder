@@ -117,9 +117,9 @@ export function Chip({
   title,
 }: {
   children: ReactNode;
-  onClick?: () => void;
-  active?: boolean;
-  title?: string;
+  onClick?: (() => void) | undefined;
+  active?: boolean | undefined;
+  title?: string | undefined;
 }) {
   const Comp = onClick ? "button" : "span";
   return (
