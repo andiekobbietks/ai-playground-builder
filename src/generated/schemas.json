@@ -1,0 +1,1033 @@
+{
+  "Concept": {
+    "$defs": {
+      "Depth": {
+        "enum": [
+          "foundation",
+          "intermediate",
+          "advanced"
+        ],
+        "title": "Depth",
+        "type": "string"
+      },
+      "RelationKind": {
+        "enum": [
+          "requires",
+          "uses",
+          "demonstrated_by",
+          "evidenced_by",
+          "assessed_against",
+          "supersedes"
+        ],
+        "title": "RelationKind",
+        "type": "string"
+      },
+      "Relationship": {
+        "description": "A typed edge in the learning graph.",
+        "properties": {
+          "kind": {
+            "$ref": "#/$defs/RelationKind"
+          },
+          "target": {
+            "description": "Stable id of the related object.",
+            "title": "Target",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Note"
+          }
+        },
+        "required": [
+          "kind",
+          "target"
+        ],
+        "title": "Relationship",
+        "type": "object"
+      },
+      "Stack": {
+        "enum": [
+          "html",
+          "css",
+          "bootstrap",
+          "php",
+          "mysql",
+          "javascript",
+          "architecture"
+        ],
+        "title": "Stack",
+        "type": "string"
+      }
+    },
+    "properties": {
+      "id": {
+        "description": "Stable slug, e.g. 'crud'.",
+        "title": "Id",
+        "type": "string"
+      },
+      "title": {
+        "title": "Title",
+        "type": "string"
+      },
+      "stack": {
+        "$ref": "#/$defs/Stack"
+      },
+      "depth": {
+        "$ref": "#/$defs/Depth"
+      },
+      "summary": {
+        "title": "Summary",
+        "type": "string"
+      },
+      "vocabulary": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Vocabulary",
+        "type": "array"
+      },
+      "common_errors": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Common Errors",
+        "type": "array"
+      },
+      "code_example": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Code Example"
+      },
+      "relationships": {
+        "items": {
+          "$ref": "#/$defs/Relationship"
+        },
+        "title": "Relationships",
+        "type": "array"
+      },
+      "wjec_reference": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "WJEC Unit 4 specification reference.",
+        "title": "Wjec Reference"
+      }
+    },
+    "required": [
+      "id",
+      "title",
+      "stack",
+      "depth",
+      "summary"
+    ],
+    "title": "Concept",
+    "type": "object"
+  },
+  "Skill": {
+    "properties": {
+      "id": {
+        "title": "Id",
+        "type": "string"
+      },
+      "title": {
+        "title": "Title",
+        "type": "string"
+      },
+      "concept_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Concept Ids",
+        "type": "array"
+      },
+      "observable_behaviour": {
+        "description": "What the learner can be seen doing when they hold this skill.",
+        "title": "Observable Behaviour",
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "title",
+      "observable_behaviour"
+    ],
+    "title": "Skill",
+    "type": "object"
+  },
+  "Task": {
+    "$defs": {
+      "PedagogyMode": {
+        "description": "Gradual release of responsibility.",
+        "enum": [
+          "i_do",
+          "we_do",
+          "you_do"
+        ],
+        "title": "PedagogyMode",
+        "type": "string"
+      }
+    },
+    "properties": {
+      "id": {
+        "title": "Id",
+        "type": "string"
+      },
+      "title": {
+        "title": "Title",
+        "type": "string"
+      },
+      "prompt": {
+        "title": "Prompt",
+        "type": "string"
+      },
+      "concept_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Concept Ids",
+        "type": "array"
+      },
+      "difficulty": {
+        "description": "1 (recall) to 5 (transfer).",
+        "title": "Difficulty",
+        "type": "integer"
+      },
+      "mode": {
+        "$ref": "#/$defs/PedagogyMode"
+      },
+      "success_criteria": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Success Criteria",
+        "type": "array"
+      }
+    },
+    "required": [
+      "id",
+      "title",
+      "prompt",
+      "difficulty",
+      "mode"
+    ],
+    "title": "Task",
+    "type": "object"
+  },
+  "Intent": {
+    "$defs": {
+      "PedagogyMode": {
+        "description": "Gradual release of responsibility.",
+        "enum": [
+          "i_do",
+          "we_do",
+          "you_do"
+        ],
+        "title": "PedagogyMode",
+        "type": "string"
+      }
+    },
+    "description": "The parsed shape of anything a learner asks, from any surface.",
+    "properties": {
+      "verb": {
+        "description": "explain | build | inspect | assess | trace | compare",
+        "title": "Verb",
+        "type": "string"
+      },
+      "subject": {
+        "description": "Concept, ADR, artefact or file id.",
+        "title": "Subject",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/PedagogyMode",
+        "default": "we_do"
+      },
+      "surface": {
+        "default": "chat",
+        "description": "chat | voice | swagger | mcp | pde",
+        "title": "Surface",
+        "type": "string"
+      },
+      "raw": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Raw"
+      }
+    },
+    "required": [
+      "verb",
+      "subject"
+    ],
+    "title": "Intent",
+    "type": "object"
+  },
+  "Evidence": {
+    "$defs": {
+      "EvidenceKind": {
+        "enum": [
+          "code",
+          "schema",
+          "test",
+          "explanation",
+          "artefact",
+          "interaction"
+        ],
+        "title": "EvidenceKind",
+        "type": "string"
+      }
+    },
+    "properties": {
+      "id": {
+        "title": "Id",
+        "type": "string"
+      },
+      "kind": {
+        "$ref": "#/$defs/EvidenceKind"
+      },
+      "concept_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Concept Ids",
+        "type": "array"
+      },
+      "decision_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Decision Id"
+      },
+      "body": {
+        "title": "Body",
+        "type": "string"
+      },
+      "created_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Created At"
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "body"
+    ],
+    "title": "Evidence",
+    "type": "object"
+  },
+  "Decision": {
+    "$defs": {
+      "DecisionStatus": {
+        "enum": [
+          "proposed",
+          "accepted",
+          "superseded"
+        ],
+        "title": "DecisionStatus",
+        "type": "string"
+      },
+      "DecisionType": {
+        "enum": [
+          "data_architecture",
+          "interface_design",
+          "algorithm",
+          "security",
+          "planning",
+          "testing"
+        ],
+        "title": "DecisionType",
+        "type": "string"
+      },
+      "Depth": {
+        "enum": [
+          "foundation",
+          "intermediate",
+          "advanced"
+        ],
+        "title": "Depth",
+        "type": "string"
+      }
+    },
+    "description": "An Architectural Decision Record, authored by or with the learner.",
+    "properties": {
+      "id": {
+        "description": "e.g. 'ADR-018'.",
+        "title": "Id",
+        "type": "string"
+      },
+      "title": {
+        "title": "Title",
+        "type": "string"
+      },
+      "status": {
+        "$ref": "#/$defs/DecisionStatus"
+      },
+      "type": {
+        "$ref": "#/$defs/DecisionType"
+      },
+      "depth": {
+        "$ref": "#/$defs/Depth"
+      },
+      "project_id": {
+        "title": "Project Id",
+        "type": "string"
+      },
+      "context": {
+        "title": "Context",
+        "type": "string"
+      },
+      "decision": {
+        "title": "Decision",
+        "type": "string"
+      },
+      "alternatives": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Alternatives",
+        "type": "array"
+      },
+      "rationale": {
+        "title": "Rationale",
+        "type": "string"
+      },
+      "consequences": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Consequences",
+        "type": "array"
+      },
+      "evidence_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Evidence Ids",
+        "type": "array"
+      },
+      "concept_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Concept Ids",
+        "type": "array"
+      },
+      "word_count_target": {
+        "default": 250,
+        "description": "Suggested NEA word budget for this decision type.",
+        "title": "Word Count Target",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "id",
+      "title",
+      "status",
+      "type",
+      "depth",
+      "project_id",
+      "context",
+      "decision",
+      "rationale"
+    ],
+    "title": "Decision",
+    "type": "object"
+  },
+  "UIComponent": {
+    "description": "A renderable Bootstrap artefact returned by an experience.",
+    "properties": {
+      "id": {
+        "title": "Id",
+        "type": "string"
+      },
+      "label": {
+        "title": "Label",
+        "type": "string"
+      },
+      "bootstrap_classes": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Bootstrap Classes",
+        "type": "array"
+      },
+      "html": {
+        "title": "Html",
+        "type": "string"
+      },
+      "concept_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Concept Ids",
+        "type": "array"
+      },
+      "notes": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Notes"
+      }
+    },
+    "required": [
+      "id",
+      "label",
+      "html"
+    ],
+    "title": "UIComponent",
+    "type": "object"
+  },
+  "Relationship": {
+    "$defs": {
+      "RelationKind": {
+        "enum": [
+          "requires",
+          "uses",
+          "demonstrated_by",
+          "evidenced_by",
+          "assessed_against",
+          "supersedes"
+        ],
+        "title": "RelationKind",
+        "type": "string"
+      }
+    },
+    "description": "A typed edge in the learning graph.",
+    "properties": {
+      "kind": {
+        "$ref": "#/$defs/RelationKind"
+      },
+      "target": {
+        "description": "Stable id of the related object.",
+        "title": "Target",
+        "type": "string"
+      },
+      "note": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Note"
+      }
+    },
+    "required": [
+      "kind",
+      "target"
+    ],
+    "title": "Relationship",
+    "type": "object"
+  },
+  "LearnerState": {
+    "$defs": {
+      "PedagogyMode": {
+        "description": "Gradual release of responsibility.",
+        "enum": [
+          "i_do",
+          "we_do",
+          "you_do"
+        ],
+        "title": "PedagogyMode",
+        "type": "string"
+      }
+    },
+    "properties": {
+      "learner_id": {
+        "title": "Learner Id",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/PedagogyMode"
+      },
+      "accuracy": {
+        "description": "Rolling proportion correct, 0-1.",
+        "title": "Accuracy",
+        "type": "number"
+      },
+      "median_response_ms": {
+        "title": "Median Response Ms",
+        "type": "integer"
+      },
+      "retries": {
+        "title": "Retries",
+        "type": "integer"
+      },
+      "hint_requests": {
+        "title": "Hint Requests",
+        "type": "integer"
+      },
+      "idle_seconds": {
+        "title": "Idle Seconds",
+        "type": "integer"
+      },
+      "successful_retrievals": {
+        "title": "Successful Retrievals",
+        "type": "integer"
+      },
+      "failed_retrievals": {
+        "title": "Failed Retrievals",
+        "type": "integer"
+      },
+      "seconds_since_last_exposure": {
+        "title": "Seconds Since Last Exposure",
+        "type": "integer"
+      },
+      "task_difficulty": {
+        "title": "Task Difficulty",
+        "type": "integer"
+      },
+      "mastered_concept_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Mastered Concept Ids",
+        "type": "array"
+      },
+      "emerging_concept_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Emerging Concept Ids",
+        "type": "array"
+      }
+    },
+    "required": [
+      "learner_id",
+      "mode",
+      "accuracy",
+      "median_response_ms",
+      "retries",
+      "hint_requests",
+      "idle_seconds",
+      "successful_retrievals",
+      "failed_retrievals",
+      "seconds_since_last_exposure",
+      "task_difficulty"
+    ],
+    "title": "LearnerState",
+    "type": "object"
+  },
+  "ExperienceRequest": {
+    "$defs": {
+      "PedagogyMode": {
+        "description": "Gradual release of responsibility.",
+        "enum": [
+          "i_do",
+          "we_do",
+          "you_do"
+        ],
+        "title": "PedagogyMode",
+        "type": "string"
+      }
+    },
+    "description": "What a learner asks the runtime to produce.",
+    "properties": {
+      "intent": {
+        "description": "Natural language, e.g. 'Create a booking form.'",
+        "title": "Intent",
+        "type": "string"
+      },
+      "mode": {
+        "$ref": "#/$defs/PedagogyMode",
+        "default": "we_do"
+      },
+      "concept_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Concept Ids",
+        "type": "array"
+      },
+      "learner_id": {
+        "default": "demo-learner",
+        "title": "Learner Id",
+        "type": "string"
+      }
+    },
+    "required": [
+      "intent"
+    ],
+    "title": "ExperienceRequest",
+    "type": "object"
+  },
+  "Experience": {
+    "$defs": {
+      "Intent": {
+        "description": "The parsed shape of anything a learner asks, from any surface.",
+        "properties": {
+          "verb": {
+            "description": "explain | build | inspect | assess | trace | compare",
+            "title": "Verb",
+            "type": "string"
+          },
+          "subject": {
+            "description": "Concept, ADR, artefact or file id.",
+            "title": "Subject",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/$defs/PedagogyMode",
+            "default": "we_do"
+          },
+          "surface": {
+            "default": "chat",
+            "description": "chat | voice | swagger | mcp | pde",
+            "title": "Surface",
+            "type": "string"
+          },
+          "raw": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Raw"
+          }
+        },
+        "required": [
+          "verb",
+          "subject"
+        ],
+        "title": "Intent",
+        "type": "object"
+      },
+      "PedagogyMode": {
+        "description": "Gradual release of responsibility.",
+        "enum": [
+          "i_do",
+          "we_do",
+          "you_do"
+        ],
+        "title": "PedagogyMode",
+        "type": "string"
+      },
+      "UIComponent": {
+        "description": "A renderable Bootstrap artefact returned by an experience.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "bootstrap_classes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Bootstrap Classes",
+            "type": "array"
+          },
+          "html": {
+            "title": "Html",
+            "type": "string"
+          },
+          "concept_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Concept Ids",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Notes"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "html"
+        ],
+        "title": "UIComponent",
+        "type": "object"
+      }
+    },
+    "description": "A structured experience description \u2014 the multi-representation object.",
+    "properties": {
+      "id": {
+        "title": "Id",
+        "type": "string"
+      },
+      "intent": {
+        "$ref": "#/$defs/Intent"
+      },
+      "mode": {
+        "$ref": "#/$defs/PedagogyMode"
+      },
+      "narration": {
+        "description": "What the runtime says while presenting this.",
+        "title": "Narration",
+        "type": "string"
+      },
+      "component": {
+        "$ref": "#/$defs/UIComponent"
+      },
+      "php": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Php"
+      },
+      "sql": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Sql"
+      },
+      "concept_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Concept Ids",
+        "type": "array"
+      },
+      "decision_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Decision Id"
+      },
+      "follow_up_questions": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Follow Up Questions",
+        "type": "array"
+      },
+      "affordances": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Affordances",
+        "type": "array"
+      }
+    },
+    "required": [
+      "id",
+      "intent",
+      "mode",
+      "narration",
+      "component"
+    ],
+    "title": "Experience",
+    "type": "object"
+  },
+  "Project": {
+    "properties": {
+      "id": {
+        "title": "Id",
+        "type": "string"
+      },
+      "title": {
+        "title": "Title",
+        "type": "string"
+      },
+      "brief": {
+        "title": "Brief",
+        "type": "string"
+      },
+      "concept_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Concept Ids",
+        "type": "array"
+      },
+      "decision_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Decision Ids",
+        "type": "array"
+      },
+      "files": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Files",
+        "type": "array"
+      }
+    },
+    "required": [
+      "id",
+      "title",
+      "brief"
+    ],
+    "title": "Project",
+    "type": "object"
+  },
+  "Tool": {
+    "description": "A capability exposed to agents over MCP.",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string"
+      },
+      "title": {
+        "title": "Title",
+        "type": "string"
+      },
+      "description": {
+        "title": "Description",
+        "type": "string"
+      },
+      "read_only": {
+        "default": true,
+        "title": "Read Only",
+        "type": "boolean"
+      },
+      "input_schema_ref": {
+        "description": "Name of the Pydantic input model.",
+        "title": "Input Schema Ref",
+        "type": "string"
+      }
+    },
+    "required": [
+      "name",
+      "title",
+      "description",
+      "input_schema_ref"
+    ],
+    "title": "Tool",
+    "type": "object"
+  },
+  "AssessmentResult": {
+    "$defs": {
+      "PedagogyMode": {
+        "description": "Gradual release of responsibility.",
+        "enum": [
+          "i_do",
+          "we_do",
+          "you_do"
+        ],
+        "title": "PedagogyMode",
+        "type": "string"
+      }
+    },
+    "properties": {
+      "concept_ids": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Concept Ids",
+        "type": "array"
+      },
+      "verdict": {
+        "description": "secure | developing | not_evidenced",
+        "title": "Verdict",
+        "type": "string"
+      },
+      "reasoning": {
+        "title": "Reasoning",
+        "type": "string"
+      },
+      "next_mode": {
+        "$ref": "#/$defs/PedagogyMode"
+      },
+      "suggested_decision_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Suggested Decision Id"
+      }
+    },
+    "required": [
+      "concept_ids",
+      "verdict",
+      "reasoning",
+      "next_mode"
+    ],
+    "title": "AssessmentResult",
+    "type": "object"
+  }
+}
