@@ -5,7 +5,7 @@ import { CheckIcon, CopyIcon, PencilRulerIcon, RefreshCcwIcon, ScanEyeIcon } fro
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { AdrView } from "@/routes/index";
+import { AdrView } from "@/routes/playground";
 import {
   BootstrapFrame,
   Chip,

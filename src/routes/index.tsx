@@ -49,7 +49,7 @@ function Parallax({
   const reduce = useReducedMotion();
   const y = useTransform(p, [0, 1], [distance, -distance]);
   return (
-    <motion.div ref={ref} style={reduce ? undefined : { y }} className={className}>
+    <motion.div ref={ref} style={reduce ? {} : { y }} className={className}>
       {children}
     </motion.div>
   );
@@ -83,15 +83,15 @@ function Hero() {
     <section ref={ref} className="relative flex min-h-[92vh] items-center overflow-hidden">
       <motion.div
         aria-hidden
-        style={reduce ? undefined : { y: gridY }}
+        style={reduce ? {} : { y: gridY }}
         className="pointer-events-none absolute inset-0 -z-20 opacity-[0.18] [background-image:linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] [background-size:48px_48px]"
       />
       <motion.div
         aria-hidden
-        style={reduce ? undefined : { y: glowY }}
+        style={reduce ? {} : { y: glowY }}
         className="pointer-events-none absolute left-1/2 top-[-18%] -z-10 size-[42rem] -translate-x-1/2 rounded-full bg-primary/15 blur-[120px]"
       />
-      <motion.div style={reduce ? undefined : { y: titleY, opacity: fade }} className="mx-auto max-w-4xl px-6">
+      <motion.div style={reduce ? {} : { y: titleY, opacity: fade }} className="mx-auto max-w-4xl px-6">
         <p className="mb-5 font-mono text-[11px] uppercase tracking-[0.35em] text-primary">
           WJEC Unit 4 · Linux · Apache · MySQL · PHP
         </p>
@@ -123,7 +123,7 @@ function Hero() {
       </motion.div>
       <motion.div
         aria-hidden
-        style={reduce ? undefined : { opacity: fade }}
+        style={reduce ? {} : { opacity: fade }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 font-mono text-[11px] text-muted-foreground"
       >
         scroll — the product explains itself
@@ -214,7 +214,7 @@ function ChapterBlock({ chapter, index }: { chapter: Chapter; index: number }) {
             </Link>
             <motion.div
               aria-hidden
-              style={reduce ? undefined : { scaleX: barScale }}
+              style={reduce ? {} : { scaleX: barScale }}
               className="mt-8 h-px origin-left bg-primary/70"
             />
           </Reveal>
