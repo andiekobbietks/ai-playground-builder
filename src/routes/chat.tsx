@@ -23,7 +23,7 @@ import {
   PromptInputBody,
   PromptInputSubmit,
   PromptInputTextarea,
-  PromptInputToolbar,
+  PromptInputFooter,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { MODE_BLURB, conceptById, seed, type Decision, type PedagogyMode } from "@/lib/lampforge";
@@ -158,12 +158,12 @@ function ChatSurface() {
                   placeholder="Ask for an explanation, a component, an ADR, or hand in evidence…"
                 />
               </PromptInputBody>
-              <PromptInputToolbar>
+              <PromptInputFooter>
                 <span className="px-2 font-mono text-[11px] text-muted-foreground">
                   tools: explain · build · adr · assess · learner
                 </span>
                 <PromptInputSubmit status={status} disabled={!input.trim() && !busy} />
-              </PromptInputToolbar>
+              </PromptInputFooter>
             </PromptInput>
           </div>
         </div>
