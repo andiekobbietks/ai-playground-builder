@@ -67,7 +67,8 @@ const tools = {
       depth: z.string().optional(),
       query: z.string().optional(),
     }),
-    execute: async (a) => listConcepts(a).map(({ id, title, stack, depth, summary }) => ({
+    execute: async (a) =>
+      listConcepts(JSON.parse(JSON.stringify(a)) as { stack?: string; depth?: string; query?: string }).map(({ id, title, stack, depth, summary }) => ({
       id,
       title,
       stack,
@@ -88,7 +89,8 @@ const tools = {
       mode: modeEnum.optional(),
       concept_ids: z.array(z.string()).optional(),
     }),
-    execute: async (a) => createExperience(a),
+    execute: async (a) =>
+      createExperience({ intent: a.intent, mode: a.mode ?? "we_do", concept_ids: a.concept_ids ?? [] }),
   }),
   show_adr: tool({
     description: "Fetch an Architectural Decision Record with its evidence. Renders as an ADR card.",
@@ -132,7 +134,7 @@ export const Route = createFileRoute("/api/chat")({
         const result = streamText({
           model: gateway("google/gemini-2.5-flash"),
           system: systemPrompt(mode ?? "we_do"),
-          messages: convertToModelMessages(messages),
+          messages: await convertToModelMessages(messages),
           tools,
           stopWhen: stepCountIs(5),
         });
